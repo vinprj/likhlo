@@ -2,7 +2,7 @@
 
 *"Likh lo" — Write it down.*
 
-A clean, fast notes app inspired by GNotes, built with modern web tech. Rich text editing, color-coded notes, folders, and offline-first storage.
+A clean, fast notes app built with modern web tech. Rich text editing, color-coded notes, folders, and offline-first storage.
 
 ## Features
 
