@@ -3,16 +3,17 @@
  * A clean, fast notes app inspired by GNotes.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNotes, useFolders, useSettings, useArchivedNotes, useTrash } from './hooks/useNotes';
 import Sidebar, { type SidebarView } from './components/Sidebar';
 import NoteCard from './components/NoteCard';
 import NoteEditor from './components/NoteEditor';
 import SearchBar from './components/SearchBar';
 import ColorPicker from './components/ColorPicker';
+import FolderSelector from './components/FolderSelector';
 import ThemeToggle from './components/ThemeToggle';
 import { sortNotes } from './utils/sort';
-import { Plus, ArrowLeft, Grid3X3, List, LayoutGrid } from 'lucide-react';
+import { Plus, ArrowLeft, List, LayoutGrid } from 'lucide-react';
 import type { Note, NoteColor } from './types/note';
 
 export default function App() {
@@ -26,15 +27,34 @@ export default function App() {
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const hasInitializedTheme = useRef(false);
 
   // Apply theme
   useEffect(() => {
     const root = document.documentElement;
-    if (settings.theme === 'dark' || (settings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const applyTheme = () => {
+      if (hasInitializedTheme.current) {
+        root.classList.add('theme-transition');
+        window.setTimeout(() => root.classList.remove('theme-transition'), 250);
+      }
+      const shouldUseDark = settings.theme === 'dark' || (settings.theme === 'system' && mediaQuery.matches);
+      root.classList.toggle('dark', shouldUseDark);
+      hasInitializedTheme.current = true;
+    };
+
+    applyTheme();
+
+    if (settings.theme !== 'system') return;
+
+    const handleChange = () => applyTheme();
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
     }
+    mediaQuery.addListener(handleChange);
+    return () => mediaQuery.removeListener(handleChange);
   }, [settings.theme]);
 
   const handleViewChange = useCallback((view: SidebarView, folderId?: string) => {
@@ -68,6 +88,17 @@ export default function App() {
     if (updated) setEditingNote(updated);
   }, [editingNote, update]);
 
+  const handleFolderChange = useCallback(async (folderId: string | null) => {
+    if (!editingNote) return;
+    const updated = await update(editingNote.id, { folderId });
+    if (updated) setEditingNote(updated);
+  }, [editingNote, update]);
+
+  const handleMoveToFolder = useCallback(async (noteId: string, folderId: string | null) => {
+    await update(noteId, { folderId });
+    refresh();
+  }, [update, refresh]);
+
   // Get notes for current view
   const getDisplayNotes = (): Note[] => {
     let displayNotes: Note[] = [];
@@ -92,8 +123,8 @@ export default function App() {
   const viewTitle = activeView === 'folder'
     ? folders.find((f) => f.id === activeFolderId)?.name || 'Folder'
     : activeView === 'archive' ? 'Archive'
-    : activeView === 'trash' ? 'Trash'
-    : 'All Notes';
+      : activeView === 'trash' ? 'Trash'
+        : 'All Notes';
 
   // Editor view
   if (editingNote) {
@@ -124,6 +155,11 @@ export default function App() {
               onChange={(e) => handleTitleChange(e.target.value)}
               placeholder="Note title"
               className="flex-1 text-xl font-semibold bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400"
+            />
+            <FolderSelector
+              folderId={editingNote.folderId}
+              folders={folders}
+              onChange={handleFolderChange}
             />
             <ColorPicker selected={editingNote.color} onChange={handleColorChange} />
           </div>
@@ -201,10 +237,12 @@ export default function App() {
                   key={note.id}
                   note={note}
                   viewMode={settings.viewMode}
+                  folders={folders}
                   onClick={() => setEditingNote(note)}
                   onPin={() => togglePin(note.id)}
                   onArchive={() => archive(note.id)}
                   onDelete={() => remove(note.id)}
+                  onMoveToFolder={(folderId) => handleMoveToFolder(note.id, folderId)}
                 />
               ))}
             </div>

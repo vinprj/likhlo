@@ -4,11 +4,11 @@
 
 import { useState } from 'react';
 import {
-  FileText, FolderIcon, Archive, Trash2, Plus, Settings, X, ChevronLeft,
+  FileText, FolderIcon, Archive, Trash2, Plus, X, ChevronLeft,
 } from 'lucide-react';
 import type { Folder } from '../types/note';
 import { COLOR_DOT } from '../utils/colors';
-import type { NoteColor } from '../types/note';
+
 
 export type SidebarView = 'notes' | 'folder' | 'archive' | 'trash';
 
@@ -167,11 +167,10 @@ function NavItem({
 }) {
   return (
     <div
-      className={`group flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
-        active
+      className={`group flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-colors ${active
           ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-      }`}
+        }`}
       onClick={onClick}
     >
       {icon}
@@ -200,11 +199,10 @@ function SidebarIconButton({
     <button
       onClick={onClick}
       title={title}
-      className={`p-2 rounded-lg transition-colors ${
-        active
+      className={`p-2 rounded-lg transition-colors ${active
           ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
           : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
-      }`}
+        }`}
     >
       {icon}
     </button>
