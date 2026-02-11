@@ -1,73 +1,46 @@
-# React + TypeScript + Vite
+# ✍️ Likhlo
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+*"Likh lo" — Write it down.*
 
-Currently, two official plugins are available:
+A clean, fast notes app inspired by GNotes, built with modern web tech. Rich text editing, color-coded notes, folders, and offline-first storage.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## React Compiler
+- **Rich Text Editor** — Headers, bold, italic, underline, lists, checklists, code blocks, highlights
+- **Color-Coded Notes** — 9 beautiful color options for visual organization
+- **Folders** — Organize notes into custom folders
+- **Search** — Full-text search across titles and content
+- **Grid/List Views** — Switch between card grid and compact list
+- **Pin & Archive** — Keep important notes on top, archive the rest
+- **Trash & Recovery** — Soft delete with recovery option
+- **Dark Mode** — Light, dark, and system-follow themes
+- **Offline First** — Works without internet (IndexedDB storage)
+- **PWA Ready** — Install on any device
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+- React 18 + TypeScript
+- Vite
+- Tailwind CSS v4
+- TipTap (rich text editor)
+- IndexedDB via `idb`
+- Lucide Icons
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Getting Started
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git clone https://github.com/vinprj/likhlo.git
+cd likhlo
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Roadmap
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- [ ] **Phase 1:** Core notes app (MVP) ← *current*
+- [ ] **Phase 2:** Cloud sync via Supabase
+- [ ] **Phase 3:** Calendar view, tags, reminders, export
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## License
+
+MIT

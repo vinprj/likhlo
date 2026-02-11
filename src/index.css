@@ -1,68 +1,103 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import "tailwindcss";
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* TipTap editor styles */
+.tiptap {
+  outline: none;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+.tiptap p.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
 }
 
-body {
-  margin: 0;
+.tiptap h1 { font-size: 1.875rem; font-weight: 700; margin: 1rem 0 0.5rem; }
+.tiptap h2 { font-size: 1.5rem; font-weight: 600; margin: 0.75rem 0 0.5rem; }
+.tiptap h3 { font-size: 1.25rem; font-weight: 600; margin: 0.5rem 0 0.25rem; }
+
+.tiptap ul { list-style: disc; padding-left: 1.5rem; }
+.tiptap ol { list-style: decimal; padding-left: 1.5rem; }
+
+.tiptap ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+
+.tiptap ul[data-type="taskList"] li {
   display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  align-items: flex-start;
+  gap: 0.5rem;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+.tiptap ul[data-type="taskList"] li label {
+  margin-top: 0.15rem;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.tiptap ul[data-type="taskList"] li[data-checked="true"] > div > p {
+  text-decoration: line-through;
+  opacity: 0.6;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.tiptap pre {
+  background: #1e1e2e;
+  color: #cdd6f4;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 0.5rem 0;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
 }
+
+.tiptap code {
+  background: #f1f5f9;
+  padding: 0.15rem 0.3rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+.dark .tiptap code {
+  background: #334155;
+}
+
+.tiptap mark {
+  background-color: #fef08a;
+  border-radius: 0.15rem;
+  padding: 0.1rem 0.15rem;
+}
+
+.dark .tiptap mark {
+  background-color: #854d0e;
+}
+
+.tiptap blockquote {
+  border-left: 3px solid #d1d5db;
+  padding-left: 1rem;
+  margin: 0.5rem 0;
+  color: #6b7280;
+}
+
+.dark .tiptap blockquote {
+  border-left-color: #4b5563;
+  color: #9ca3af;
+}
+
+.tiptap hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 1rem 0;
+}
+
+.dark .tiptap hr {
+  border-top-color: #374151;
+}
+
+.tiptap p { margin: 0.25rem 0; }
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+.dark ::-webkit-scrollbar-thumb { background: #475569; }
