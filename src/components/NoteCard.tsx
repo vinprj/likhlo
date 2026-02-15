@@ -78,12 +78,12 @@ export default function NoteCard({ note, viewMode, folders, onClick, onPin, onAr
 
   return (
     <div
-      className={`group rounded-xl border p-4 cursor-pointer transition-all hover:shadow-lg ${colors.bg} ${colors.bgDark} ${colors.border} flex flex-col min-h-[160px]`}
+      className={`group rounded-xl border p-4 cursor-pointer transition-all hover:shadow-lg note-card ${colors.bg} ${colors.bgDark} ${colors.border} flex flex-col min-h-[160px]`}
       onClick={onClick}
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-1.5">
-          {note.isPinned && <Pin size={14} className="text-blue-500" />}
+          {note.isPinned && <Pin size={14} className="text-teal-500" />}
           <h3 className="font-semibold text-gray-900 dark:text-gray-100 line-clamp-1">
             {note.title || 'Untitled'}
           </h3>
