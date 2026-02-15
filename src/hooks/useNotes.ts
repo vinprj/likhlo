@@ -80,8 +80,8 @@ export function useFolders() {
     refresh();
   }, [refresh]);
 
-  const create = useCallback(async (name: string, color?: Note['color']) => {
-    const folder = await storage.createFolder(name, color);
+  const create = useCallback(async (name: string, icon?: string, color?: Note['color']) => {
+    const folder = await storage.createFolder(name, color, icon);
     await refresh();
     return folder;
   }, [refresh]);
