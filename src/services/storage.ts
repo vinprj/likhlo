@@ -14,6 +14,7 @@ interface LikhloDBSchema extends DBSchema {
       'by-folder': string;
       'by-updated': number;
       'by-created': number;
+      'by-user': string;
     };
   };
   folders: {
@@ -33,13 +34,14 @@ let dbPromise: Promise<IDBPDatabase<LikhloDBSchema>> | null = null;
 
 function getDB(): Promise<IDBPDatabase<LikhloDBSchema>> {
   if (!dbPromise) {
-    dbPromise = openDB<LikhloDBSchema>('likhlo-db', 1, {
-      upgrade(db) {
+    dbPromise = openDB<LikhloDBSchema>('likhlo-db', 2, {
+      upgrade(db, oldVersion) {
         // Notes store
         const noteStore = db.createObjectStore('notes', { keyPath: 'id' });
         noteStore.createIndex('by-folder', 'folderId');
         noteStore.createIndex('by-updated', 'updatedAt');
         noteStore.createIndex('by-created', 'createdAt');
+        noteStore.createIndex('by-user', 'userId');
 
         // Folders store
         const folderStore = db.createObjectStore('folders', { keyPath: 'id' });
@@ -64,6 +66,7 @@ export async function createNote(note: Partial<Note> = {}): Promise<Note> {
   const now = Date.now();
   const fullNote: Note = {
     id: generateId(),
+    userId: note.userId || null,
     title: '',
     content: null,
     plainText: '',

@@ -15,6 +15,7 @@ export type NoteColor =
 
 export interface Note {
   id: string;
+  userId: string | null;
   title: string;
   /** TipTap JSON content */
   content: any;

@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNotes, useFolders, useSettings, useArchivedNotes, useTrash } from './hooks/useNotes';
+import { supabase } from './lib/supabase';
 import Sidebar, { type SidebarView } from './components/Sidebar';
 import NoteCard from './components/NoteCard';
 import NoteEditor from './components/NoteEditor';
@@ -12,8 +13,9 @@ import SearchBar from './components/SearchBar';
 import ColorPicker from './components/ColorPicker';
 import FolderSelector from './components/FolderSelector';
 import ThemeToggle from './components/ThemeToggle';
+import Auth from './components/Auth';
 import { sortNotes } from './utils/sort';
-import { Plus, ArrowLeft, List, LayoutGrid } from 'lucide-react';
+import { Plus, ArrowLeft, List, LayoutGrid, LogOut } from 'lucide-react';
 import type { Note, NoteColor } from './types/note';
 
 export default function App() {
@@ -23,11 +25,29 @@ export default function App() {
   const archivedNotes = useArchivedNotes();
   const trash = useTrash();
 
+  const [session, setSession] = useState<any>(null);
   const [activeView, setActiveView] = useState<SidebarView>('notes');
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const hasInitializedTheme = useRef(false);
+
+  // Check auth state
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = useCallback(async () => {
+    await supabase.auth.signOut();
+  }, []);
 
   // Apply theme
   useEffect(() => {
@@ -66,9 +86,10 @@ export default function App() {
   const handleCreateNote = useCallback(async () => {
     const note = await create({
       folderId: activeView === 'folder' ? activeFolderId : null,
+      userId: session?.user?.id,
     });
     setEditingNote(note);
-  }, [create, activeView, activeFolderId]);
+  }, [create, activeView, activeFolderId, session]);
 
   const handleNoteUpdate = useCallback(async (content: any, plainText: string) => {
     if (!editingNote) return;
@@ -102,18 +123,23 @@ export default function App() {
   // Get notes for current view
   const getDisplayNotes = (): Note[] => {
     let displayNotes: Note[] = [];
+    // Filter by user if logged in
+    const userNotes = session?.user?.id 
+      ? notes.filter((n) => n.userId === session.user.id)
+      : notes;
+    
     switch (activeView) {
       case 'notes':
-        displayNotes = notes;
+        displayNotes = userNotes;
         break;
       case 'folder':
-        displayNotes = notes.filter((n) => n.folderId === activeFolderId);
+        displayNotes = userNotes.filter((n) => n.folderId === activeFolderId);
         break;
       case 'archive':
-        displayNotes = archivedNotes.notes;
+        displayNotes = archivedNotes.notes.filter((n) => n.userId === session?.user?.id);
         break;
       case 'trash':
-        displayNotes = trash.notes;
+        displayNotes = trash.notes.filter((n) => n.userId === session?.user?.id);
         break;
     }
     return sortNotes(displayNotes, settings.sortBy, settings.sortDesc);
@@ -125,6 +151,11 @@ export default function App() {
     : activeView === 'archive' ? 'Archive'
       : activeView === 'trash' ? 'Trash'
         : 'All Notes';
+
+  // Show auth if not logged in
+  if (!session) {
+    return <Auth onAuthSuccess={() => {}} />;
+  }
 
   // Editor view
   if (editingNote) {
@@ -162,6 +193,13 @@ export default function App() {
               onChange={handleFolderChange}
             />
             <ColorPicker selected={editingNote.color} onChange={handleColorChange} />
+            <button
+              onClick={handleSignOut}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              title="Sign out"
+            >
+              <LogOut size={20} className="text-gray-500" />
+            </button>
           </div>
           <div className="flex-1 overflow-hidden">
             <NoteEditor
@@ -203,6 +241,13 @@ export default function App() {
               {settings.viewMode === 'grid' ? <List size={20} className="text-gray-500" /> : <LayoutGrid size={20} className="text-gray-500" />}
             </button>
             <ThemeToggle theme={settings.theme} onChange={(theme) => updateSettings({ theme })} />
+            <button
+              onClick={handleSignOut}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              title="Sign out"
+            >
+              <LogOut size={20} className="text-gray-500" />
+            </button>
           </div>
         </div>
 
