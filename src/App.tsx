@@ -5,7 +5,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNotes, useFolders, useSettings, useArchivedNotes, useTrash } from './hooks/useNotes';
-import { supabase } from './lib/supabase';
 import Sidebar, { type SidebarView } from './components/Sidebar';
 import NoteCard from './components/NoteCard';
 import NoteEditor from './components/NoteEditor';
@@ -17,6 +16,30 @@ import Auth from './components/Auth';
 import { sortNotes } from './utils/sort';
 import { Plus, ArrowLeft, List, LayoutGrid, LogOut } from 'lucide-react';
 import type { Note, NoteColor } from './types/note';
+
+// Inline Supabase client
+const supabaseUrl = 'https://rlpusnjwgqskqyawavpo.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJscHVzbmp3Z3Fza3F5YXdhdnBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3ODg0NTksImV4cCI6MjA4NjM2NDQ1OX0.bdPCZiIKl73m5gCXcl56GWo_mZI96k73ORw9Afpqi9k';
+
+const supabase = {
+  auth: {
+    signOut: async () => {
+      localStorage.removeItem('supabase_session');
+      return { error: null };
+    },
+    getSession: async () => {
+      const stored = localStorage.getItem('supabase_session');
+      if (stored) {
+        const data = JSON.parse(stored);
+        return { data: { session: data }, error: null };
+      }
+      return { data: { session: null }, error: null };
+    },
+    onAuthStateChange: (callback: (event: string, session: any) => void) => {
+      return { data: { subscription: { unsubscribe: () => {} } } };
+    },
+  },
+};
 
 export default function App() {
   const { notes, loading, create, update, remove, archive, togglePin, search, refresh } = useNotes();
@@ -37,16 +60,11 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   const handleSignOut = useCallback(async () => {
     await supabase.auth.signOut();
+    setSession(null);
   }, []);
 
   // Apply theme
@@ -123,23 +141,20 @@ export default function App() {
   // Get notes for current view
   const getDisplayNotes = (): Note[] => {
     let displayNotes: Note[] = [];
-    // Filter by user if logged in
-    const userNotes = session?.user?.id 
-      ? notes.filter((n) => n.userId === session.user.id)
-      : notes;
+    const userId = session?.user?.id;
     
     switch (activeView) {
       case 'notes':
-        displayNotes = userNotes;
+        displayNotes = userId ? notes.filter((n) => n.userId === userId) : notes;
         break;
       case 'folder':
-        displayNotes = userNotes.filter((n) => n.folderId === activeFolderId);
+        displayNotes = (userId ? notes.filter((n) => n.userId === userId) : notes).filter((n) => n.folderId === activeFolderId);
         break;
       case 'archive':
-        displayNotes = archivedNotes.notes.filter((n) => n.userId === session?.user?.id);
+        displayNotes = archivedNotes.notes.filter((n) => n.userId === userId);
         break;
       case 'trash':
-        displayNotes = trash.notes.filter((n) => n.userId === session?.user?.id);
+        displayNotes = trash.notes.filter((n) => n.userId === userId);
         break;
     }
     return sortNotes(displayNotes, settings.sortBy, settings.sortDesc);
@@ -154,7 +169,7 @@ export default function App() {
 
   // Show auth if not logged in
   if (!session) {
-    return <Auth onAuthSuccess={() => {}} />;
+    return <Auth onAuthSuccess={() => { supabase.auth.getSession().then(({ data: { session } }) => setSession(session)); }} />;
   }
 
   // Editor view

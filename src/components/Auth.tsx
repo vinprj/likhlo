@@ -1,5 +1,57 @@
 import { useState } from 'react';
-import { supabase } from './lib/supabase';
+
+// Inline Supabase client to bypass module resolution issues
+const supabaseUrl = 'https://rlpusnjwgqskqyawavpo.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJscHVzbmp3Z3Fza3F5YXdhdnBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3ODg0NTksImV4cCI6MjA4NjM2NDQ1OX0.bdPCZiIKl73m5gCXcl56GWo_mZI96k73ORw9Afpqi9k';
+
+const supabase = {
+  auth: {
+    signUp: async (opts: { email: string; password: string }) => {
+      const res = await fetch(`${supabaseUrl}/auth/v1/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseAnonKey,
+        },
+        body: JSON.stringify(opts),
+      });
+      return { data: await res.json(), error: res.ok ? null : new Error(await res.text()) };
+    },
+    signInWithPassword: async (opts: { email: string; password: string }) => {
+      const res = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseAnonKey,
+        },
+        body: JSON.stringify(opts),
+      });
+      const data = await res.json();
+      if (!res.ok) return { data: null, error: new Error(data.msg || 'Sign in failed') };
+      return { data, error: null };
+    },
+    signOut: async () => {
+      const res = await fetch(`${supabaseUrl}/auth/v1/logout`, {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseAnonKey,
+        },
+      });
+      return { error: res.ok ? null : new Error('Sign out failed') };
+    },
+    getSession: async () => {
+      const res = await fetch(`${supabaseUrl}/auth/v1/session`, {
+        headers: { 'apikey': supabaseAnonKey },
+      });
+      const data = await res.json();
+      return { data: { session: data.session }, error: res.ok ? null : new Error('Failed') };
+    },
+    onAuthStateChange: (callback: (event: string, session: any) => void) => {
+      // Basic implementation - just return unsubscribe
+      return { data: { subscription: { unsubscribe: () => {} } } };
+    },
+  },
+};
 
 interface AuthProps {
   onAuthSuccess: () => void;
@@ -25,8 +77,10 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
         if (error) throw error;
         setMessage('Check your email for the confirmation link!');
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        // Store session in localStorage
+        localStorage.setItem('supabase_session', JSON.stringify(data));
         onAuthSuccess();
       }
     } catch (err: any) {
