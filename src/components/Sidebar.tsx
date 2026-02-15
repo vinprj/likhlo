@@ -8,7 +8,8 @@ import {
 } from 'lucide-react';
 import type { Folder } from '../types/note';
 import { COLOR_DOT } from '../utils/colors';
-
+import { getFolderIcon } from './FolderIconPicker';
+import FolderModal from './FolderModal';
 
 export type SidebarView = 'notes' | 'folder' | 'archive' | 'trash';
 
@@ -17,7 +18,7 @@ interface SidebarProps {
   activeView: SidebarView;
   activeFolderId: string | null;
   onViewChange: (view: SidebarView, folderId?: string) => void;
-  onCreateFolder: (name: string) => void;
+  onCreateFolder: (name: string, icon?: string, color?: string) => void;
   onDeleteFolder: (id: string) => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
@@ -27,15 +28,11 @@ export default function Sidebar({
   folders, activeView, activeFolderId, onViewChange,
   onCreateFolder, onDeleteFolder, collapsed, onToggleCollapse,
 }: SidebarProps) {
-  const [newFolderName, setNewFolderName] = useState('');
   const [showNewFolder, setShowNewFolder] = useState(false);
 
-  const handleCreateFolder = () => {
-    if (newFolderName.trim()) {
-      onCreateFolder(newFolderName.trim());
-      setNewFolderName('');
-      setShowNewFolder(false);
-    }
+  const handleCreateFolder = (name: string, icon: string, color: string) => {
+    onCreateFolder(name, icon, color);
+    setShowNewFolder(false);
   };
 
   if (collapsed) {
@@ -53,15 +50,18 @@ export default function Sidebar({
           onClick={() => onViewChange('notes')}
           title="All Notes"
         />
-        {folders.map((f) => (
-          <SidebarIconButton
-            key={f.id}
-            icon={<FolderIcon size={20} />}
-            active={activeView === 'folder' && activeFolderId === f.id}
-            onClick={() => onViewChange('folder', f.id)}
-            title={f.name}
-          />
-        ))}
+        {folders.map((f) => {
+          const Icon = getFolderIcon(f.icon);
+          return (
+            <SidebarIconButton
+              key={f.id}
+              icon={<Icon size={20} />}
+              active={activeView === 'folder' && activeFolderId === f.id}
+              onClick={() => onViewChange('folder', f.id)}
+              title={f.name}
+            />
+          );
+        })}
         <div className="flex-1" />
         <SidebarIconButton
           icon={<Archive size={20} />}
@@ -105,37 +105,26 @@ export default function Sidebar({
         <div className="mt-4 mb-1 flex items-center justify-between px-3">
           <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Folders</span>
           <button
-            onClick={() => setShowNewFolder(!showNewFolder)}
+            onClick={() => setShowNewFolder(true)}
             className="p-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
           >
-            {showNewFolder ? <X size={14} className="text-gray-400" /> : <Plus size={14} className="text-gray-400" />}
+            <Plus size={14} className="text-gray-400" />
           </button>
         </div>
 
-        {showNewFolder && (
-          <div className="px-2 mb-2">
-            <input
-              type="text"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
-              placeholder="Folder name"
-              className="w-full px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:border-blue-500"
-              autoFocus
+        {folders.map((folder) => {
+          const Icon = getFolderIcon(folder.icon);
+          return (
+            <NavItem
+              key={folder.id}
+              icon={<Icon size={18} className="text-teal-600" />}
+              label={folder.name}
+              active={activeView === 'folder' && activeFolderId === folder.id}
+              onClick={() => onViewChange('folder', folder.id)}
+              onDelete={() => onDeleteFolder(folder.id)}
             />
-          </div>
-        )}
-
-        {folders.map((folder) => (
-          <NavItem
-            key={folder.id}
-            icon={<div className={`w-3 h-3 rounded-full ${COLOR_DOT[folder.color]}`} />}
-            label={folder.name}
-            active={activeView === 'folder' && activeFolderId === folder.id}
-            onClick={() => onViewChange('folder', folder.id)}
-            onDelete={() => onDeleteFolder(folder.id)}
-          />
-        ))}
+          );
+        })}
 
         <div className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-2">
           <NavItem
@@ -152,6 +141,14 @@ export default function Sidebar({
           />
         </div>
       </nav>
+
+      {/* New Folder Modal */}
+      {showNewFolder && (
+        <FolderModal
+          onClose={() => setShowNewFolder(false)}
+          onSave={handleCreateFolder}
+        />
+      )}
     </div>
   );
 }
@@ -168,7 +165,7 @@ function NavItem({
   return (
     <div
       className={`group flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-colors ${active
-          ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+          ? 'bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-300'
           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
         }`}
       onClick={onClick}
@@ -200,7 +197,7 @@ function SidebarIconButton({
       onClick={onClick}
       title={title}
       className={`p-2 rounded-lg transition-colors ${active
-          ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+          ? 'bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-300'
           : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
         }`}
     >

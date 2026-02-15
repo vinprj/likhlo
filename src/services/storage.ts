@@ -140,12 +140,13 @@ export async function emptyTrash(): Promise<void> {
 
 // ─── Folders ─────────────────────────────────────────────────────────
 
-export async function createFolder(name: string, color: Note['color'] = 'default'): Promise<Folder> {
+export async function createFolder(name: string, color: Note['color'] = 'default', icon: string = 'folder'): Promise<Folder> {
   const db = await getDB();
   const folders = await getAllFolders();
   const folder: Folder = {
     id: generateId(),
     name,
+    icon,
     color,
     order: folders.length,
     createdAt: Date.now(),

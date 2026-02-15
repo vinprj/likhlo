@@ -15,8 +15,9 @@ import ThemeToggle from './components/ThemeToggle';
 import Auth from './components/Auth';
 import NoteTemplates from './components/NoteTemplates';
 import Profile from './components/Profile';
+import NoteExport from './components/NoteExport';
 import { sortNotes } from './utils/sort';
-import { Plus, ArrowLeft, List, LayoutGrid, LogOut, User } from 'lucide-react';
+import { Plus, ArrowLeft, List, LayoutGrid, LogOut, User, Download } from 'lucide-react';
 import type { Note, NoteColor } from './types/note';
 
 // Inline Supabase client
@@ -57,6 +58,7 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showExport, setShowExport] = useState(false);
   const hasInitializedTheme = useRef(false);
 
   // Check auth state
@@ -215,6 +217,13 @@ export default function App() {
             />
             <ColorPicker selected={editingNote.color} onChange={handleColorChange} />
             <button
+              onClick={() => setShowExport(true)}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              title="Export & Tags"
+            >
+              <Download size={20} className="text-gray-500" />
+            </button>
+            <button
               onClick={() => setShowProfile(true)}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
               title="Profile"
@@ -348,6 +357,14 @@ export default function App() {
               handleSignOut();
               setShowProfile(false);
             }}
+          />
+        )}
+
+        {/* Export Modal */}
+        {showExport && editingNote && (
+          <NoteExport
+            note={editingNote}
+            onClose={() => setShowExport(false)}
           />
         )}
       </div>
