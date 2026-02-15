@@ -35,7 +35,7 @@ let dbPromise: Promise<IDBPDatabase<LikhloDBSchema>> | null = null;
 function getDB(): Promise<IDBPDatabase<LikhloDBSchema>> {
   if (!dbPromise) {
     dbPromise = openDB<LikhloDBSchema>('likhlo-db', 2, {
-      upgrade(db, oldVersion) {
+      upgrade(db, oldVersion: number) {
         // Notes store
         const noteStore = db.createObjectStore('notes', { keyPath: 'id' });
         noteStore.createIndex('by-folder', 'folderId');
