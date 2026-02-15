@@ -13,6 +13,7 @@ import ColorPicker from './components/ColorPicker';
 import FolderSelector from './components/FolderSelector';
 import ThemeToggle from './components/ThemeToggle';
 import Auth from './components/Auth';
+import NoteTemplates from './components/NoteTemplates';
 import { sortNotes } from './utils/sort';
 import { Plus, ArrowLeft, List, LayoutGrid, LogOut } from 'lucide-react';
 import type { Note, NoteColor } from './types/note';
@@ -53,6 +54,7 @@ export default function App() {
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   const hasInitializedTheme = useRef(false);
 
   // Check auth state
@@ -101,10 +103,12 @@ export default function App() {
     setEditingNote(null);
   }, []);
 
-  const handleCreateNote = useCallback(async () => {
+  const handleCreateNote = useCallback(async (template?: { title: string; content: any }) => {
     const note = await create({
       folderId: activeView === 'folder' ? activeFolderId : null,
       userId: session?.user?.id,
+      title: template?.title || '',
+      content: template?.content || null,
     });
     setEditingNote(note);
   }, [create, activeView, activeFolderId, session]);
@@ -311,12 +315,26 @@ export default function App() {
 
         {/* FAB */}
         {activeView !== 'trash' && activeView !== 'archive' && (
-          <button
-            onClick={handleCreateNote}
-            className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
-          >
-            <Plus size={24} />
-          </button>
+          <>
+            <button
+              onClick={() => setShowTemplates(true)}
+              className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+              title="New note"
+            >
+              <Plus size={24} />
+            </button>
+          </>
+        )}
+
+        {/* Template Modal */}
+        {showTemplates && (
+          <NoteTemplates
+            onSelect={(template) => {
+              handleCreateNote(template);
+              setShowTemplates(false);
+            }}
+            onClose={() => setShowTemplates(false)}
+          />
         )}
       </div>
     </div>
