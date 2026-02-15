@@ -14,8 +14,9 @@ import FolderSelector from './components/FolderSelector';
 import ThemeToggle from './components/ThemeToggle';
 import Auth from './components/Auth';
 import NoteTemplates from './components/NoteTemplates';
+import Profile from './components/Profile';
 import { sortNotes } from './utils/sort';
-import { Plus, ArrowLeft, List, LayoutGrid, LogOut } from 'lucide-react';
+import { Plus, ArrowLeft, List, LayoutGrid, LogOut, User } from 'lucide-react';
 import type { Note, NoteColor } from './types/note';
 
 // Inline Supabase client
@@ -55,6 +56,7 @@ export default function App() {
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const hasInitializedTheme = useRef(false);
 
   // Check auth state
@@ -213,11 +215,11 @@ export default function App() {
             />
             <ColorPicker selected={editingNote.color} onChange={handleColorChange} />
             <button
-              onClick={handleSignOut}
+              onClick={() => setShowProfile(true)}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-              title="Sign out"
+              title="Profile"
             >
-              <LogOut size={20} className="text-gray-500" />
+              <User size={20} className="text-gray-500" />
             </button>
           </div>
           <div className="flex-1 overflow-hidden">
@@ -261,11 +263,11 @@ export default function App() {
             </button>
             <ThemeToggle theme={settings.theme} onChange={(theme) => updateSettings({ theme })} />
             <button
-              onClick={handleSignOut}
+              onClick={() => setShowProfile(true)}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-              title="Sign out"
+              title="Profile"
             >
-              <LogOut size={20} className="text-gray-500" />
+              <User size={20} className="text-gray-500" />
             </button>
           </div>
         </div>
@@ -334,6 +336,18 @@ export default function App() {
               setShowTemplates(false);
             }}
             onClose={() => setShowTemplates(false)}
+          />
+        )}
+
+        {/* Profile Modal */}
+        {showProfile && (
+          <Profile
+            session={session}
+            onClose={() => setShowProfile(false)}
+            onSignOut={() => {
+              handleSignOut();
+              setShowProfile(false);
+            }}
           />
         )}
       </div>
