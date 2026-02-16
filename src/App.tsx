@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNotes, useFolders, useSettings, useArchivedNotes, useTrash } from './hooks/useNotes';
+import { syncFromCloud } from './services/storage';
 import Sidebar, { type SidebarView } from './components/Sidebar';
 import NoteCard from './components/NoteCard';
 import NoteEditor from './components/NoteEditor';
@@ -46,10 +47,16 @@ const supabase = {
 
 export default function App() {
   const { notes, loading, create, update, remove, archive, togglePin, search, refresh } = useNotes();
-  const { folders, create: createFolder, remove: deleteFolder } = useFolders();
+  const { folders, create: createFolder, remove: deleteFolder, refresh: refreshFolders } = useFolders();
   const { settings, update: updateSettings } = useSettings();
   const archivedNotes = useArchivedNotes();
   const trash = useTrash();
+
+  // Refs for sync
+  const notesRef = useRef(refresh);
+  const foldersRef = useRef(refreshFolders);
+  notesRef.current = refresh;
+  foldersRef.current = refreshFolders;
 
   const [session, setSession] = useState<any>(null);
   const [activeView, setActiveView] = useState<SidebarView>('notes');
@@ -177,7 +184,18 @@ export default function App() {
 
   // Show auth if not logged in
   if (!session) {
-    return <Auth onAuthSuccess={() => { supabase.auth.getSession().then(({ data: { session } }) => setSession(session)); }} />;
+    return <Auth onAuthSuccess={async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      // Sync from cloud after login
+      if (session) {
+        const result = await syncFromCloud();
+        console.log('Synced from cloud:', result);
+        // Refresh notes and folders
+        notesRef.current?.();
+        foldersRef.current?.();
+      }
+    }} />;
   }
 
   // Editor view
