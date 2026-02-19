@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, X } from 'lucide-react';
 
 // Inline Supabase client to bypass module resolution issues
 const supabaseUrl = 'https://rlpusnjwgqskqyawavpo.supabase.co';
@@ -56,9 +56,10 @@ const supabase = {
 
 interface AuthProps {
   onAuthSuccess: () => void;
+  onClose?: () => void;
 }
 
-export default function Auth({ onAuthSuccess }: AuthProps) {
+export default function Auth({ onAuthSuccess, onClose }: AuthProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -93,14 +94,25 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose?.(); }}
+    >
       <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Likhlo</h1>
-          <p className="text-gray-500 dark:text-gray-400">Write it down.</p>
-        </div>
-
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-8">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 relative">
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              title="Continue without signing in"
+            >
+              <X size={18} />
+            </button>
+          )}
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Sign in to Likhlo</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">Sync your notes across all your devices.</p>
+          </div>
           <div className="flex gap-2 mb-6">
             <button
               type="button"
@@ -189,11 +201,22 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
           {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
           <button
             onClick={() => setIsSignUp(!isSignUp)}
-            className="text-blue-600 hover:text-blue-700 font-medium"
+            className="text-teal-600 hover:text-teal-700 font-medium"
           >
             {isSignUp ? 'Sign In' : 'Sign Up'}
           </button>
         </p>
+
+        {onClose && (
+          <p className="text-center text-sm text-gray-400 dark:text-gray-500 mt-3">
+            <button
+              onClick={onClose}
+              className="hover:text-gray-600 dark:hover:text-gray-300 underline underline-offset-2 transition-colors"
+            >
+              Continue writing without signing in →
+            </button>
+          </p>
+        )}
       </div>
     </div>
   );

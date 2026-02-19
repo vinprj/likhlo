@@ -18,7 +18,7 @@ import NoteTemplates from './components/NoteTemplates';
 import Profile from './components/Profile';
 import NoteExport from './components/NoteExport';
 import { sortNotes } from './utils/sort';
-import { Plus, ArrowLeft, List, LayoutGrid, LogOut, User, Download } from 'lucide-react';
+import { Plus, ArrowLeft, List, LayoutGrid, User, Download, Cloud, X } from 'lucide-react';
 import type { Note, NoteColor } from './types/note';
 
 // Inline Supabase client
@@ -67,6 +67,10 @@ export default function App() {
   const [showProfile, setShowProfile] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const hasInitializedTheme = useRef(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(() =>
+    localStorage.getItem('sync-banner-dismissed') === 'true'
+  );
 
   // Check auth state
   useEffect(() => {
@@ -78,6 +82,25 @@ export default function App() {
   const handleSignOut = useCallback(async () => {
     await supabase.auth.signOut();
     setSession(null);
+  }, []);
+
+  const handleAuthSuccess = useCallback(async () => {
+    setShowAuthModal(false);
+    const { data: { session } } = await supabase.auth.getSession();
+    setSession(session);
+    if (session) {
+      setBannerDismissed(true);
+      localStorage.setItem('sync-banner-dismissed', 'true');
+      const result = await syncFromCloud();
+      console.log('Synced from cloud:', result);
+      notesRef.current?.();
+      foldersRef.current?.();
+    }
+  }, []);
+
+  const dismissBanner = useCallback(() => {
+    setBannerDismissed(true);
+    localStorage.setItem('sync-banner-dismissed', 'true');
   }, []);
 
   // Apply theme
@@ -166,10 +189,14 @@ export default function App() {
         displayNotes = (userId ? notes.filter((n) => n.userId === userId) : notes).filter((n) => n.folderId === activeFolderId);
         break;
       case 'archive':
-        displayNotes = archivedNotes.notes.filter((n) => n.userId === userId);
+        displayNotes = userId
+          ? archivedNotes.notes.filter((n) => n.userId === userId)
+          : archivedNotes.notes;
         break;
       case 'trash':
-        displayNotes = trash.notes.filter((n) => n.userId === userId);
+        displayNotes = userId
+          ? trash.notes.filter((n) => n.userId === userId)
+          : trash.notes;
         break;
     }
     return sortNotes(displayNotes, settings.sortBy, settings.sortDesc);
@@ -182,21 +209,33 @@ export default function App() {
       : activeView === 'trash' ? 'Trash'
         : 'All Notes';
 
-  // Show auth if not logged in
-  if (!session) {
-    return <Auth onAuthSuccess={async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      // Sync from cloud after login
-      if (session) {
-        const result = await syncFromCloud();
-        console.log('Synced from cloud:', result);
-        // Refresh notes and folders
-        notesRef.current?.();
-        foldersRef.current?.();
-      }
-    }} />;
-  }
+  // Sync banner — shown to unauthenticated users until dismissed
+  const syncBanner = !session && !bannerDismissed ? (
+    <div className="flex items-center gap-3 px-4 py-2.5 bg-teal-50 dark:bg-teal-900/20 border-b border-teal-200 dark:border-teal-800 text-sm">
+      <Cloud size={16} className="text-teal-600 dark:text-teal-400 shrink-0" />
+      <span className="flex-1 text-teal-800 dark:text-teal-300">
+        Notes are saved locally on this device.{' '}
+        <button
+          onClick={() => setShowAuthModal(true)}
+          className="font-semibold underline underline-offset-2 hover:no-underline transition-all"
+        >
+          Sign in to sync across devices →
+        </button>
+      </span>
+      <button
+        onClick={dismissBanner}
+        className="p-1 rounded hover:bg-teal-100 dark:hover:bg-teal-800 text-teal-500 transition-colors"
+        title="Dismiss"
+      >
+        <X size={14} />
+      </button>
+    </div>
+  ) : null;
+
+  // Auth modal
+  const authModal = showAuthModal ? (
+    <Auth onAuthSuccess={handleAuthSuccess} onClose={() => setShowAuthModal(false)} />
+  ) : null;
 
   // Editor view
   if (editingNote) {
@@ -242,13 +281,14 @@ export default function App() {
               <Download size={20} className="text-gray-500" />
             </button>
             <button
-              onClick={() => setShowProfile(true)}
+              onClick={() => session ? setShowProfile(true) : setShowAuthModal(true)}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-              title="Profile"
+              title={session ? 'Profile' : 'Sign in'}
             >
-              <User size={20} className="text-gray-500" />
+              <User size={20} className={session ? 'text-gray-500' : 'text-teal-500'} />
             </button>
           </div>
+          {syncBanner}
           <div className="flex-1 overflow-hidden">
             <NoteEditor
               content={editingNote.content}
@@ -257,6 +297,7 @@ export default function App() {
           </div>
         </div>
       </div>
+      {authModal}
     );
   }
 
@@ -290,14 +331,16 @@ export default function App() {
             </button>
             <ThemeToggle theme={settings.theme} onChange={(theme) => updateSettings({ theme })} />
             <button
-              onClick={() => setShowProfile(true)}
+              onClick={() => session ? setShowProfile(true) : setShowAuthModal(true)}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-              title="Profile"
+              title={session ? 'Profile' : 'Sign in'}
             >
-              <User size={20} className="text-gray-500" />
+              <User size={20} className={session ? 'text-gray-500' : 'text-teal-500'} />
             </button>
           </div>
         </div>
+
+        {syncBanner}
 
         {/* Notes */}
         <div className="flex-1 overflow-y-auto p-6">
@@ -386,6 +429,7 @@ export default function App() {
           />
         )}
       </div>
+      {authModal}
     </div>
   );
 }
