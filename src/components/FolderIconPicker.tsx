@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { 
   Folder, FolderOpen, Star, Heart, Bookmark, Lightbulb, 
-  Work, Home, Code, Music, Camera, Gamepad2, ShoppingBag,
+  Briefcase, Home, Code, Music, Camera, Gamepad2, ShoppingBag,
   Utensils, Dumbbell, Plane, Book, Calendar, Mail, Settings,
   StarHalf, Sparkles, Zap, Shield, Flag, Tag
 } from 'lucide-react';
@@ -12,7 +12,7 @@ const FOLDER_ICONS = [
   { id: 'heart', icon: Heart, name: 'Heart' },
   { id: 'bookmark', icon: Bookmark, name: 'Bookmark' },
   { id: 'lightbulb', icon: Lightbulb, name: 'Idea' },
-  { id: 'work', icon: Work, name: 'Work' },
+  { id: 'work', icon: Briefcase, name: 'Work' },
   { id: 'home', icon: Home, name: 'Home' },
   { id: 'code', icon: Code, name: 'Code' },
   { id: 'music', icon: Music, name: 'Music' },
