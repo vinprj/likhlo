@@ -62,7 +62,9 @@ export default function App() {
   const [activeView, setActiveView] = useState<SidebarView>('notes');
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth < 768
+  );
   const [showTemplates, setShowTemplates] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showExport, setShowExport] = useState(false);
@@ -253,10 +255,10 @@ export default function App() {
         />
         <div className="flex-1 flex flex-col min-w-0">
           {/* Editor header */}
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+          <div className="flex items-center gap-1.5 sm:gap-3 px-2 sm:px-4 py-2 sm:py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
             <button
               onClick={() => { setEditingNote(null); refresh(); }}
-              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 shrink-0"
             >
               <ArrowLeft size={20} className="text-gray-600 dark:text-gray-400" />
             </button>
@@ -265,27 +267,29 @@ export default function App() {
               value={editingNote.title}
               onChange={(e) => handleTitleChange(e.target.value)}
               placeholder="Note title"
-              className="flex-1 text-xl font-semibold bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400"
+              className="flex-1 min-w-0 text-base sm:text-xl font-semibold bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400"
             />
-            <FolderSelector
-              folderId={editingNote.folderId}
-              folders={folders}
-              onChange={handleFolderChange}
-            />
-            <ColorPicker selected={editingNote.color} onChange={handleColorChange} />
+            <div className="hidden sm:flex items-center gap-1.5">
+              <FolderSelector
+                folderId={editingNote.folderId}
+                folders={folders}
+                onChange={handleFolderChange}
+              />
+              <ColorPicker selected={editingNote.color} onChange={handleColorChange} />
+            </div>
             <button
               onClick={() => setShowExport(true)}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 shrink-0"
               title="Export & Tags"
             >
-              <Download size={20} className="text-gray-500" />
+              <Download size={18} className="text-gray-500" />
             </button>
             <button
               onClick={() => session ? setShowProfile(true) : setShowAuthModal(true)}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 shrink-0"
               title={session ? 'Profile' : 'Sign in'}
             >
-              <User size={20} className={session ? 'text-gray-500' : 'text-teal-500'} />
+              <User size={18} className={session ? 'text-gray-500' : 'text-teal-500'} />
             </button>
           </div>
           {syncBanner}
@@ -316,26 +320,26 @@ export default function App() {
       />
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <div className="flex items-center gap-4 px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">{viewTitle}</h2>
-          <div className="flex-1 max-w-md">
+        <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-6 py-2.5 sm:py-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+          <h2 className="text-base sm:text-xl font-bold text-gray-900 dark:text-white shrink-0">{viewTitle}</h2>
+          <div className="flex-1 min-w-0">
             <SearchBar onSearch={search} />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <button
               onClick={() => updateSettings({ viewMode: settings.viewMode === 'grid' ? 'list' : 'grid' })}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
               title={settings.viewMode === 'grid' ? 'Switch to list' : 'Switch to grid'}
             >
-              {settings.viewMode === 'grid' ? <List size={20} className="text-gray-500" /> : <LayoutGrid size={20} className="text-gray-500" />}
+              {settings.viewMode === 'grid' ? <List size={18} className="text-gray-500" /> : <LayoutGrid size={18} className="text-gray-500" />}
             </button>
             <ThemeToggle theme={settings.theme} onChange={(theme) => updateSettings({ theme })} />
             <button
               onClick={() => session ? setShowProfile(true) : setShowAuthModal(true)}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
               title={session ? 'Profile' : 'Sign in'}
             >
-              <User size={20} className={session ? 'text-gray-500' : 'text-teal-500'} />
+              <User size={18} className={session ? 'text-gray-500' : 'text-teal-500'} />
             </button>
           </div>
         </div>
